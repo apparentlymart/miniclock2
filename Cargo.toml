@@ -11,6 +11,7 @@ cortex-m-rt = "0.6.8"
 cortex-m-semihosting = "0.3.3"
 panic-halt = "0.2.0"
 feather_m0 = "0.3.0"
+embedded-hal = "0.2.3"
 
 [[bin]]
 name = "miniclock2"
