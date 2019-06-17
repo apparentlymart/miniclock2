@@ -1,0 +1,7 @@
+#!/bin/bash
+
+set -eux
+
+cargo build
+arm-none-eabi-objcopy -O binary target/thumbv6m-none-eabi/debug/miniclock2 target/thumbv6m-none-eabi/debug/miniclock2.bin
+bossac --port=ttyACM0 -e -w -v -b target/thumbv6m-none-eabi/debug/miniclock2.bin -R
