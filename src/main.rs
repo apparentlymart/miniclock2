@@ -1,6 +1,9 @@
 #![no_std]
 #![no_main]
 
+#[macro_use(await)]
+extern crate nb;
+
 extern crate cortex_m;
 extern crate cortex_m_semihosting;
 extern crate embedded_hal;
@@ -15,13 +18,13 @@ use hal::delay::Delay;
 use hal::prelude::*;
 use hal::{entry, CorePeripherals, Peripherals};
 
-struct OLED<SPI, CS, DC> {
+struct SSD1306<SPI, CS, DC> {
     spi: SPI,
     cs: CS,
     dc: DC,
 }
 
-impl<SPI, CS, DC> OLED<SPI, CS, DC>
+impl<SPI, CS, DC> SSD1306<SPI, CS, DC>
 where
     SPI: embedded_hal::spi::FullDuplex<u8>,
     CS: embedded_hal::digital::v2::OutputPin,
@@ -60,14 +63,32 @@ fn main() -> ! {
         pins.miso,
         &mut pins.port,
     );
-    let _oled = OLED::new(
+    let oled = SSD1306::new(
         spi_dev,
         pins.d5.into_open_drain_output(&mut pins.port),
         pins.d6.into_open_drain_output(&mut pins.port),
     );
 
+    oled.cs.set_high();
+
+    let mut blinky = || {
+        let mut state = false;
+        loop {
+            // `await!` means suspend / yield instead of blocking
+            await!(Timer.wait()).unwrap(); // NOTE(unwrap) E = !
+
+            state = !state;
+
+            if state {
+                Led.on();
+            } else {
+                Led.off();
+            }
+        }
+    };
+
     loop {
-        delay.delay_ms(255u8);
+        delay.delay_ms(128u8);
         red_led.set_high();
         delay.delay_ms(255u8);
         red_led.set_low();
