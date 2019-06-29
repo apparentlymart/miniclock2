@@ -1,0 +1,13 @@
+[package]
+name = "ssd1322"
+version = "0.1.0"
+authors = ["Martin Atkins <mart@degeneration.co.uk>"]
+edition = "2018"
+
+[dependencies]
+embedded-hal = "^0.2.3"
+
+[dev-dependencies]
+spidriver = "^0.1.0"
+spidriver-hal = "^0.1.0"
+serial-embedded-hal = "^0.1.2"

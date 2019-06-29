@@ -1,6 +1,7 @@
 [workspace]
 members = [
     "firmware/lpc812-mbed-xpresso",
+    "firmware/ssd1322",
 ]
 
 [profile.release]
