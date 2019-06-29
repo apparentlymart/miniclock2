@@ -29,9 +29,9 @@ fn main() -> ! {
     // that runs at 750 kHz.
     let clock = syscon.irc_derived_clock;
 
-    // Configure the PIO0_12 pin. The API tracks the state of pins at
+    // Configure the PIO0_15 pin. The API tracks the state of pins at
     // compile-time, to prevent any mistakes.
-    let mut pio0_12 = swm.pins.pio0_12.into_gpio_pin(&p.GPIO).into_output();
+    let mut pio0_15 = swm.pins.pio0_15.into_gpio_pin(&p.GPIO).into_output();
 
     // Let's already initialize the durations that we're going to sleep for
     // between changing the LED state. We do this by specifying the number of
@@ -55,9 +55,9 @@ fn main() -> ! {
 
     // Blink the LED
     loop {
-        pio0_12.set_high();
+        pio0_15.set_high();
         sleep.sleep(high_time);
-        pio0_12.set_low();
+        pio0_15.set_low();
         sleep.sleep(low_time);
     }
 }

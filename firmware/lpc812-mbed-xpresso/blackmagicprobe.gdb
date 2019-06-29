@@ -15,8 +15,11 @@ break rust_begin_unwind
 # *try* to stop at the user entry point (it might be gone due to inlining)
 break main
 
-monitor arm semihosting enable
-load
+# We assume that the first (and only) device in the chain is our MCU
+monitor swdp_scan
+attach 1
 
-# start the process but immediately halt the processor
-stepi
+load
+compare-sections
+run
+

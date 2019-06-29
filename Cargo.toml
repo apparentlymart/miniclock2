@@ -1,6 +1,6 @@
 [workspace]
 members = [
-    "firmware",
+    "firmware/lpc812-mbed-xpresso",
 ]
 
 [profile.release]
