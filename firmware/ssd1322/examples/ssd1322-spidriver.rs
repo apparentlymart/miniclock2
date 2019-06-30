@@ -1,3 +1,4 @@
+use graphics::vector::{Rect, Vector};
 use serial_embedded_hal::{PortSettings, Serial};
 use spidriver::SPIDriver;
 use spidriver_hal::SPIDriverHAL;
@@ -5,7 +6,7 @@ use ssd1322::SSD1322;
 
 fn main() {
     // This example configures a NHD-3.12-25664UCY2 display module (with
-    // integrated SSD1322) and displays a checkerboard pattern on it, accessing
+    // integrated SSD1322) and displays a test pattern on it, accessing
     // the display module via 4-wire SPI via a SPIDriver board on /dev/ttyUSB0.
     //
     // As well as the SPI signals, this example assumes:
@@ -30,6 +31,7 @@ fn main() {
     // Pulse the reset signal to reset the display driver chip before we do
     // anything else.
     sd.set_b(false).unwrap();
+    std::thread::sleep(std::time::Duration::from_millis(10));
     sd.set_b(true).unwrap();
 
     let sdh = SPIDriverHAL::new(sd);
@@ -43,50 +45,38 @@ fn main() {
 
     init(&mut driver).unwrap();
 
-    // We'll allocate a buffer to render our checkerboard pattern into, and then
-    // stream it over to the display.
-    const WIDTH: usize = 256;
-    const HEIGHT: usize = 64;
-    const BPP: usize = 4;
-    const BUF_SIZE: usize = HEIGHT * WIDTH / (8 / BPP);
-    let mut buf: [u8; BUF_SIZE] = [0; BUF_SIZE];
-    for y in 0..HEIGHT {
-        // each byte represents two pixels
-        for x in 0..(WIDTH / 2) {
-            buf[(y * WIDTH / 2 + x)] = if y % 2 == 0 { 0xf0 } else { 0x0f };
-        }
-    }
-    driver.write_gdram(&buf[..]).unwrap();
-    //driver.set_display_offset(32).unwrap();
-    driver.set_display_start_line(0).unwrap();
+    // The ssd1322 display driver has column addresses that address four pixels
+    // each, and so without buffering the display in local memory we're
+    // effectively limited to updating only multiples of four pixels in the
+    // horizontal axis. To simplify things for now, we'll just scale everything
+    // by 4 and produce chunky 4x4 "pixels".
+    let mut disp = graphics::scale::ScaleDisplay::new(
+        ssd1322::gfx::Display::new(driver, Vector(256, 64), 28),
+        4,
+    );
+    let mut eight = true;
+    loop {
+        use graphics::Display; // Make display trait methods visible on "disp"
 
-    let mut disp = ssd1322::gfx::Display::new(driver);
-    {
-        use graphics::Display;
-        //disp.clear().unwrap();
-        disp.fill_rect(graphics::vector::Rect::new4(4, 4, 16, 16))
-            .unwrap();
-    }
+        // Our Display interface uses double-buffering, so we're always
+        // drawing to an off-screen buffer here and then flip() instructs
+        // the display driver to use that other part of its memory so we
+        // can do an atomic transition from one frame to the next.
+        disp.clear().unwrap();
+        disp.fill_rect(Rect::new4(0, 0, 8, 1)).unwrap();
+        disp.fill_rect(Rect::new4(0, 0, 1, 16)).unwrap();
+        disp.fill_rect(Rect::new4(7, 0, 8, 16)).unwrap();
+        if eight {
+            disp.fill_rect(Rect::new4(0, 7, 8, 8)).unwrap();
+        }
+        disp.fill_rect(Rect::new4(0, 15, 8, 16)).unwrap();
 
-    /*loop {
-        driver.exit_partial_display().unwrap();
-        std::thread::sleep_ms(1000);
-        for i in 0..31 {
-            driver.enable_partial_display(i, 63 - i).unwrap();
-            std::thread::sleep_ms(5);
-        }
-        driver
-            .set_display_mode(ssd1322::config::DisplayMode::AllOff)
-            .unwrap();
-        std::thread::sleep_ms(1000);
-        driver
-            .set_display_mode(ssd1322::config::DisplayMode::Normal)
-            .unwrap();
-        for i in 0..31 {
-            driver.enable_partial_display(31 - i, 32 + i).unwrap();
-            std::thread::sleep_ms(5);
-        }
-    }*/
+        // Show the new graphics frame on the display.
+        disp.flip().unwrap();
+
+        eight = !eight;
+        std::thread::sleep(std::time::Duration::from_millis(1000));
+    }
 }
 
 fn init<I: ssd1322::interface::Interface>(
@@ -131,6 +121,11 @@ fn init<I: ssd1322::interface::Interface>(
     drv.set_second_precharge_period(8)?;
     drv.set_deselect_voltage_level(0x07)?;
     drv.set_display_mode(ssd1322::config::DisplayMode::Normal)?;
+
+    // Clear out the first page of GDRAM so we won't show garbage while
+    // we're waiting for the first real frame to render.
+    drv.write_gdram_iter(core::iter::repeat(0x0).take(8192))?;
+
     drv.set_sleep_mode(false)?; // power display back on
 
     Ok(())

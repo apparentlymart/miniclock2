@@ -106,13 +106,13 @@ where
         self.write_byte(cmd)?;
         self.data_mode()?;
 
-        let mut buf: [u8; 64] = [0; 64];
+        let mut buf: [u8; 128] = [0; 128];
         let mut idx = 0 as usize;
         let mut ct = 0 as usize;
         for c in data {
             buf[idx] = c;
             idx += 1;
-            if idx == 64 {
+            if idx == buf.len() {
                 // We've filled up our buffer, so we'll flush it and then
                 // start filling it again.
                 self.write_bytes(&buf[..])?;
