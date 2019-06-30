@@ -293,6 +293,7 @@ name = "ssd1322"
 version = "0.1.0"
 dependencies = [
  "embedded-hal 0.2.3 (registry+https://github.com/rust-lang/crates.io-index)",
+ "graphics 0.1.0",
  "serial-embedded-hal 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "spidriver 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "spidriver-hal 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",

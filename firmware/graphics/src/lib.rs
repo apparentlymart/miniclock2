@@ -10,21 +10,7 @@ pub trait Display {
     const ON: Self::P;
 
     fn size(&self) -> Vector;
-    fn window(&self, bounds: Rect);
     fn flip(&self) -> Result<(), Self::Error>;
-}
-
-pub trait Window<D: Display> {
-    type Buffer: Buffer<D::P>;
-
-    fn size(&self) -> Vector;
-    fn fill(&self, p: D::P) -> Result<(), D::Error>;
-    fn draw<F: FnOnce(&mut Self::Buffer)>(&self, f: F);
-    fn sub_window(&self, bounds: Rect);
-}
-
-pub trait Buffer<P> {
-    fn size(&self) -> Vector;
-    fn set(&mut self, x: i32, y: i32, p: P);
-    fn get(&mut self, x: i32, y: i32) -> P;
+    fn clear(&mut self) -> Result<(), Self::Error>;
+    fn fill_rect(&mut self, r: Rect) -> Result<(), Self::Error>;
 }

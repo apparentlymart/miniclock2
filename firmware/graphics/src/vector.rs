@@ -57,6 +57,17 @@ impl Rect {
         }
     }
 
+    pub fn new4(x1: i32, y1: i32, x2: i32, y2: i32) -> Rect {
+        Rect {
+            start: Vector(x1, y1),
+            end: Vector(x2, y2),
+        }
+    }
+
+    pub fn size(self) -> Vector {
+        self.end - self.start
+    }
+
     pub fn normalized(self) -> Self {
         let mut ret = self;
         if ret.start.0 > ret.end.0 {
@@ -88,5 +99,16 @@ impl Rect {
             ret.end.1 = lim.end.1;
         }
         ret
+    }
+}
+
+impl core::ops::Add<Vector> for Rect {
+    type Output = Self;
+
+    fn add(self, rhs: Vector) -> Self {
+        Self {
+            start: self.start + rhs,
+            end: self.end + rhs,
+        }
     }
 }

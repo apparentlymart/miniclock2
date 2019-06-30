@@ -1,11 +1,12 @@
 #![no_std]
 
 pub mod config;
+pub mod gfx;
 pub mod interface;
 pub mod spi4wire;
 
 #[derive(Debug)]
-pub struct SSD1322<I: interface::Interface>(I);
+pub struct SSD1322<I: interface::Interface>(pub(crate) I);
 
 impl<I, CommsError> SSD1322<I>
 where
@@ -28,6 +29,16 @@ where
 
     pub fn write_gdram(&mut self, data: &[u8]) -> Result<(), Error<CommsError>> {
         self.0.cmd_n(0x5c, data).map_err(Error::comms)
+    }
+
+    pub fn write_gdram_iter<It: core::iter::IntoIterator<Item = u8>>(
+        &mut self,
+        data: It,
+    ) -> Result<(), Error<CommsError>> {
+        match self.0.cmd_n_iter(0x5c, data).map_err(Error::comms) {
+            Ok(_) => Ok(()),
+            Err(e) => Err(e),
+        }
     }
 
     pub fn set_row_addresses(&mut self, start: u8, end: u8) -> Result<(), Error<CommsError>> {

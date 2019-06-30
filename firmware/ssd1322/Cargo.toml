@@ -6,6 +6,7 @@ edition = "2018"
 
 [dependencies]
 embedded-hal = "^0.2.3"
+graphics = { path = "../graphics" }
 
 [dev-dependencies]
 spidriver = "^0.1.0"

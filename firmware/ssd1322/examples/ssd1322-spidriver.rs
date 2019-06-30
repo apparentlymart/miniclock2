@@ -57,8 +57,18 @@ fn main() {
         }
     }
     driver.write_gdram(&buf[..]).unwrap();
+    //driver.set_display_offset(32).unwrap();
+    driver.set_display_start_line(0).unwrap();
 
-    loop {
+    let mut disp = ssd1322::gfx::Display::new(driver);
+    {
+        use graphics::Display;
+        //disp.clear().unwrap();
+        disp.fill_rect(graphics::vector::Rect::new4(4, 4, 16, 16))
+            .unwrap();
+    }
+
+    /*loop {
         driver.exit_partial_display().unwrap();
         std::thread::sleep_ms(1000);
         for i in 0..31 {
@@ -76,7 +86,7 @@ fn main() {
             driver.enable_partial_display(31 - i, 32 + i).unwrap();
             std::thread::sleep_ms(5);
         }
-    }
+    }*/
 }
 
 fn init<I: ssd1322::interface::Interface>(
@@ -152,5 +162,16 @@ where
     fn cmd_n(&mut self, cmd: u8, data: &[u8]) -> Result<(), Err> {
         println!("command {:#04x} ({} bytes of data)", cmd, data.len());
         self.0.cmd_n(cmd, data)
+    }
+
+    fn cmd_n_iter<It: core::iter::IntoIterator<Item = u8>>(
+        &mut self,
+        cmd: u8,
+        data: It,
+    ) -> Result<usize, Self::Error> {
+        println!("command {:#04x} (with data iterator)", cmd);
+        let ct = self.0.cmd_n_iter(cmd, data)?;
+        println!("  - iterator produced {} bytes", ct);
+        Ok(ct)
     }
 }

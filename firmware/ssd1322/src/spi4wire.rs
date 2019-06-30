@@ -91,15 +91,41 @@ where
         self.select()?;
         self.command_mode()?;
         self.write_byte(cmd)?;
-        let mut remain = data;
         self.data_mode()?;
-        while remain.len() > 0 {
-            let len: usize = if remain.len() > 64 { 64 } else { remain.len() };
-            let (this, next) = remain.split_at(len);
-            self.write_bytes(this)?;
-            remain = next;
-        }
+        self.write_bytes(data)?;
         self.deselect()
+    }
+
+    fn cmd_n_iter<I: core::iter::IntoIterator<Item = u8>>(
+        &mut self,
+        cmd: u8,
+        data: I,
+    ) -> Result<usize, Error<SPIErr, CSErr, DCErr>> {
+        self.select()?;
+        self.command_mode()?;
+        self.write_byte(cmd)?;
+        self.data_mode()?;
+
+        let mut buf: [u8; 64] = [0; 64];
+        let mut idx = 0 as usize;
+        let mut ct = 0 as usize;
+        for c in data {
+            buf[idx] = c;
+            idx += 1;
+            if idx == 64 {
+                // We've filled up our buffer, so we'll flush it and then
+                // start filling it again.
+                self.write_bytes(&buf[..])?;
+                idx = 0;
+            }
+            ct += 1;
+        }
+        if idx > 0 {
+            // Flush anything left in our buffer.
+            self.write_bytes(&buf[..idx])?;
+        }
+        self.deselect()?;
+        Ok(ct)
     }
 }
 
