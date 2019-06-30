@@ -2,6 +2,7 @@
 members = [
     "firmware/lpc812-mbed-xpresso",
     "firmware/ssd1322",
+    "firmware/graphics",
 ]
 
 [profile.release]
