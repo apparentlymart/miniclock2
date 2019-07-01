@@ -18,4 +18,5 @@ break main
 
 monitor arm semihosting enable
 load
+monitor reset halt
 continue

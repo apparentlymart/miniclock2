@@ -10,3 +10,10 @@ codegen-units = 1
 debug = true
 lto = true
 panic = "abort"
+
+[profile.release]
+codegen-units = 1
+debug = false
+lto = true
+panic = "abort"
+opt-level = "s"
