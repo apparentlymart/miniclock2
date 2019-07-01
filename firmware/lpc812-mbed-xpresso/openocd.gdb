@@ -1,3 +1,4 @@
+set pagination off
 set remotetimeout unlimited
 target extended-remote :3333
 
