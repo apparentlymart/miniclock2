@@ -5,7 +5,8 @@ members = [
     "firmware/graphics",
 ]
 
-[profile.release]
+[profile.dev]
 codegen-units = 1
 debug = true
 lto = true
+panic = "abort"

@@ -1,0 +1,22 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "LPC812-MAX",
+      "type": "cppdbg",
+      "request": "launch",
+      "program": "${workspaceRoot}/target/thumbv6m-none-eabi/debug/lpc812-mbed-xpresso",
+      "args": [],
+      "cwd": "${workspaceFolder}/firmware/lpc812-mbed-xpresso",
+      "stopAtEntry": false,
+      "environment": [],
+      "MIMode": "gdb",
+      "miDebuggerPath": "${workspaceFolder}/firmware/lpc812-mbed-xpresso/gdb",
+      "miDebuggerArgs": "--command=${workspaceFolder}/firmware/lpc812-mbed-xpresso/openocd.gdb",
+      "targetArchitecture": "arm",
+      "preLaunchTask": "Build for LPC812-MAX",
+      "logging": { "engineLogging": true },
+      "customLaunchSetupCommands": []
+    }
+  ]
+}
