@@ -13,7 +13,8 @@
         "${workspaceRoot}/firmware/lpc812-mbed-xpresso/openocd.vscode.cfg"
       ],
       "showDevDebugOutput": true,
-      "runToMain": true
+      "runToMain": false,
+      "postLaunchCommands": ["br rust_begin_unwind"]
     }
   ]
 }
