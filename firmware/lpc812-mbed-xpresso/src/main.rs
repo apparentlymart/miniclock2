@@ -7,20 +7,18 @@ extern crate cortex_m_rt;
 // machinery, so we'll just halt on panic.
 extern crate panic_halt;
 
-use lpc81x_pac;
+use lpc81x_hal as hal;
 
-#[rtfm::app(device = lpc81x_pac)]
+#[rtfm::app(device = lpc81x_hal)]
 const APP: () = {
-    static mut GPIO0: lpc81x_pac::GPIO_PORT = ();
+    static mut LED_PIN: hal::pins::pin::Pin17<hal::pins::mode::DigitalOutput> = ();
 
     #[init]
     fn init() -> init::LateResources {
         let cp: rtfm::Peripherals = core;
-        let p: lpc81x_pac::Peripherals = device;
+        let p: hal::Peripherals = device;
 
-        p.GPIO_PORT
-            .dir0
-            .modify(|r, w| unsafe { w.bits(r.bits() | 1 << 17) });
+        let led_pin = p.pins.gpio17.to_digital_output(true);
 
         let mut syst = cp.SYST;
         syst.set_clock_source(cortex_m::peripheral::syst::SystClkSource::Core);
@@ -29,11 +27,12 @@ const APP: () = {
         syst.enable_counter();
         syst.enable_interrupt();
 
-        init::LateResources { GPIO0: p.GPIO_PORT }
+        init::LateResources { LED_PIN: led_pin }
     }
 
-    #[exception(resources = [GPIO0])]
+    #[exception(resources = [LED_PIN])]
     fn SysTick() {
-        resources.GPIO0.not0.write(|w| unsafe { w.bits(1 << 17) });
+        use embedded_hal::digital::v2::ToggleableOutputPin;
+        resources.LED_PIN.toggle().unwrap();
     }
 };
