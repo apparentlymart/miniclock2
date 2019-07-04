@@ -176,8 +176,10 @@ dependencies = [
  "cortex-m-rtfm 0.4.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "cortex-m-semihosting 0.3.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "embedded-hal 0.2.3 (registry+https://github.com/rust-lang/crates.io-index)",
+ "graphics 0.1.0",
  "lpc81x-hal 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "panic-halt 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "ssd1322 0.1.0",
 ]
 
 [[package]]
