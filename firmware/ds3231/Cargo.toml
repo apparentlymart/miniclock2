@@ -1,0 +1,9 @@
+[package]
+name = "ds3231"
+version = "0.1.0"
+authors = ["Martin Atkins <mart@degeneration.co.uk>"]
+edition = "2018"
+
+[dependencies]
+embedded-hal = "^0.2.3"
+bcdtime = { path = "../bcdtime" }

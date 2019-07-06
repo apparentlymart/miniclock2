@@ -1,6 +1,7 @@
 [workspace]
 members = [
     "firmware/bcdtime",
+    "firmware/ds3231",
     "firmware/graphics",
     "firmware/lpc812-mbed-xpresso",
     "firmware/ssd1322",

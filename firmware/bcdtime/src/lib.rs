@@ -16,7 +16,7 @@ pub struct DateTime {
 pub trait Read {
     type Error;
 
-    fn read(&self) -> Result<DateTime, Self::Error>;
+    fn read(&mut self) -> Result<DateTime, Self::Error>;
 }
 
 /// Implemented by objects that can write `DateTime` values.
@@ -31,6 +31,10 @@ pub trait Write {
 pub struct BCD(u8);
 
 impl BCD {
+    pub fn from_raw(v: u8) -> Self {
+        BCD(v)
+    }
+
     pub fn tens(self) -> i32 {
         (self.0 >> 4) as i32
     }
@@ -41,6 +45,10 @@ impl BCD {
 
     pub fn digit(self, idx: usize) -> i32 {
         ((self.0 >> (4 * idx)) & 0xf) as i32
+    }
+
+    pub fn raw(self) -> u8 {
+        return self.0
     }
 }
 
