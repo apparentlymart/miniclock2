@@ -16,7 +16,7 @@ ds3231 = { path = "../ds3231" }
 embedded-hal = { version = "0.2.3", features = ["unproven"] }
 graphics = { path = "../graphics" }
 panic-halt = "0.2.0"
-lpc81x-hal = "0.1.0"
+lpc81x-hal = "0.2.0"
 ssd1322 = { path = "../ssd1322" }
 
 [[bin]]
