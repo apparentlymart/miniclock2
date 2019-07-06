@@ -4,6 +4,11 @@ target extended-remote :3333
 
 monitor halt
 
+# don't confirm on "quit"
+define hook-quit
+    set confirm off
+end
+
 # print demangled symbols
 set print asm-demangle on
 
