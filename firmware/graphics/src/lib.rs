@@ -6,7 +6,7 @@ pub mod scale;
 use vector::{Rect, Vector};
 
 pub trait Display {
-    type Error;
+    type Error : core::fmt::Debug;
     type P;
     const OFF: Self::P;
     const ON: Self::P;

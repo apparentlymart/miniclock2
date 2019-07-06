@@ -8,6 +8,7 @@ pub struct Display<I: crate::interface::Interface> {
 impl<I, CommsErr> Display<I>
 where
     I: crate::interface::Interface<Error = CommsErr>,
+    CommsErr: core::fmt::Debug,
 {
     pub fn new(drv: crate::SSD1322<I>, size: graphics::vector::Vector, col_offset: u8) -> Self {
         Self {
@@ -22,6 +23,7 @@ where
 impl<I, CommsErr> graphics::Display for Display<I>
 where
     I: crate::interface::Interface<Error = CommsErr>,
+    CommsErr: core::fmt::Debug,
 {
     type Error = crate::Error<CommsErr>;
     type P = bool;

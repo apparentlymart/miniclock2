@@ -27,6 +27,8 @@ where
 impl<I2C, WRErr, WErr> bcdtime::Read for DS3231<I2C>
 where
     I2C: i2c::WriteRead<Error=WRErr> + i2c::Write<Error=WErr>,
+    WRErr: core::fmt::Debug,
+    WErr: core::fmt::Debug,
 {
     type Error = Error<WRErr, WErr>;
 
@@ -69,6 +71,8 @@ where
 impl<I2C, WRErr, WErr> bcdtime::Write for DS3231<I2C>
 where
     I2C: i2c::WriteRead<Error=WRErr> + i2c::Write<Error=WErr>,
+    WRErr: core::fmt::Debug,
+    WErr: core::fmt::Debug,
 {
     type Error = Error<WRErr, WErr>;
 
@@ -95,14 +99,23 @@ where
     }
 }
 
-pub enum Error<WRErr, WErr> {
+#[derive(Debug)]
+pub enum Error<WRErr, WErr>
+where
+    WRErr: core::fmt::Debug,
+    WErr: core::fmt::Debug,
+{
     Request,
     Protocol,
     WriteRead(WRErr),
     Write(WErr),
 }
 
-impl<WRErr, WErr> Error<WRErr, WErr> {
+impl<WRErr, WErr> Error<WRErr, WErr>
+where
+    WRErr: core::fmt::Debug,
+    WErr: core::fmt::Debug,
+{
     fn wr(err: WRErr) -> Self {
         Self::WriteRead(err)
     }

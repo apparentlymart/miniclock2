@@ -12,23 +12,56 @@ use ssd1322::SSD1322;
 
 #[rtfm::app(device = lpc81x_hal)]
 const APP: () = {
-    static mut LED_PIN: hal::pins::pin::Pin17<hal::pins::mode::DigitalOutput> = ();
-    static mut DISPLAY: graphics::scale::ScaleDisplay<
-        ssd1322::gfx::Display<
-            ssd1322::spi4wire::SPI4Wire<
-                lpc81x_hal::spi::SPI0<
-                    lpc81x_hal::spi::mode::Host,
-                    lpc81x_hal::pins::mode::Assigned<
-                        lpc81x_hal::pins::pin::Pin12<lpc81x_hal::pins::mode::Unassigned>,
+    static mut EVENTS: clockmain::Events = ();
+    static mut APP: clockmain::App<
+        ds3231::DS3231<
+            lpc81x_hal::i2c::I2C<
+                lpc81x_hal::pins::mode::Assigned<
+                    lpc81x_hal::pins::pin::Pin11<
+                        lpc81x_hal::pins::mode::Unassigned,
                     >,
-                    lpc81x_hal::pins::mode::Assigned<
-                        lpc81x_hal::pins::pin::Pin14<lpc81x_hal::pins::mode::Unassigned>,
-                    >,
-                    lpc81x_hal::pins::mode::Unassigned,
-                    lpc81x_hal::pins::mode::Unassigned,
                 >,
-                lpc81x_hal::pins::pin::Pin13<lpc81x_hal::pins::mode::DigitalOutput>,
-                lpc81x_hal::pins::pin::Pin15<lpc81x_hal::pins::mode::DigitalOutput>,
+                lpc81x_hal::pins::mode::Assigned<
+                    lpc81x_hal::pins::pin::Pin10<
+                        lpc81x_hal::pins::mode::Unassigned,
+                    >,
+                >,
+                lpc81x_hal::i2c::mode::Host<
+                    lpc81x_hal::i2c::mode::Active,
+                >,
+                lpc81x_hal::i2c::mode::Device<
+                    lpc81x_hal::i2c::mode::Inactive,
+                >,
+                lpc81x_hal::i2c::mode::Monitor<
+                    lpc81x_hal::i2c::mode::Inactive,
+                >,
+            >
+        >,
+        graphics::scale::ScaleDisplay<
+            ssd1322::gfx::Display<
+                ssd1322::spi4wire::SPI4Wire<
+                    lpc81x_hal::spi::SPI0<
+                        lpc81x_hal::spi::mode::Host,
+                        lpc81x_hal::pins::mode::Assigned<
+                            lpc81x_hal::pins::pin::Pin12<
+                                lpc81x_hal::pins::mode::Unassigned,
+                            >,
+                        >,
+                        lpc81x_hal::pins::mode::Assigned<
+                            lpc81x_hal::pins::pin::Pin14<
+                                lpc81x_hal::pins::mode::Unassigned,
+                            >,
+                        >,
+                        lpc81x_hal::pins::mode::Unassigned,
+                        lpc81x_hal::pins::mode::Unassigned,
+                    >,
+                    lpc81x_hal::pins::pin::Pin13<
+                        lpc81x_hal::pins::mode::DigitalOutput,
+                    >,
+                    lpc81x_hal::pins::pin::Pin15<
+                        lpc81x_hal::pins::mode::DigitalOutput,
+                    >,
+                >,
             >,
         >,
     > = ();
@@ -37,8 +70,6 @@ const APP: () = {
     fn init() -> init::LateResources {
         let cp: rtfm::Peripherals = core;
         let p: hal::Peripherals = device;
-
-        let led_pin = p.pins.gpio17.to_digital_output(true);
 
         let mut syst = cp.SYST;
         syst.set_clock_source(cortex_m::peripheral::syst::SystClkSource::Core);
@@ -74,45 +105,38 @@ const APP: () = {
             4,
         );
 
+        let i2c = p.i2c.activate(p.pins.gpio11, p.pins.gpio10).enable_host_mode();
+        let rtc = ds3231::DS3231::new(i2c);
+
+        let app = clockmain::App::new(rtc, disp);
+
         init::LateResources {
-            DISPLAY: disp,
-            LED_PIN: led_pin,
+            APP: app,
+            EVENTS: clockmain::Events::default(),
         }
     }
 
-    #[exception(resources = [LED_PIN, DISPLAY])]
+    #[idle(resources = [EVENTS, APP])]
+    fn idle() -> ! {
+        let app = &mut resources.APP;
+        loop {
+            // We'll temporarily block all of the exceptions/interrupts that
+            // might update events while we deal with our update step.
+            resources.EVENTS.lock(|events| {
+                if events.has_pending() {
+                    app.update(events);
+                }
+                events.reset();
+            });
+            app.redraw();
+
+            rtfm::export::wfi();
+        }
+    }
+
+    #[exception(resources = [EVENTS])]
     fn SysTick() {
-        static mut EIGHT: bool = true;
-
-        {
-            use embedded_hal::digital::v2::ToggleableOutputPin;
-            resources.LED_PIN.toggle().unwrap();
-        }
-
-        {
-            use graphics::vector::Rect;
-            use graphics::Display; // Make display trait methods visible on "disp"
-
-            let disp = &mut resources.DISPLAY;
-
-            // Our Display interface uses double-buffering, so we're always
-            // drawing to an off-screen buffer here and then flip() instructs
-            // the display driver to use that other part of its memory so we
-            // can do an atomic transition from one frame to the next.
-            disp.clear().unwrap();
-            disp.fill_rect(Rect::new4(0, 0, 8, 1)).unwrap();
-            disp.fill_rect(Rect::new4(0, 0, 1, 16)).unwrap();
-            disp.fill_rect(Rect::new4(7, 0, 8, 16)).unwrap();
-            if *EIGHT {
-                disp.fill_rect(Rect::new4(0, 7, 8, 8)).unwrap();
-            }
-            disp.fill_rect(Rect::new4(0, 15, 8, 16)).unwrap();
-
-            // Show the new graphics frame on the display.
-            disp.flip().unwrap();
-
-            *EIGHT = !*EIGHT;
-        }
+        resources.EVENTS.tick = true;
     }
 };
 

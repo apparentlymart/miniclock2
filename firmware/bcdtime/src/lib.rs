@@ -14,14 +14,14 @@ pub struct DateTime {
 
 /// Implemented by objects that can read `DateTime` values.
 pub trait Read {
-    type Error;
+    type Error : core::fmt::Debug;
 
     fn read(&mut self) -> Result<DateTime, Self::Error>;
 }
 
 /// Implemented by objects that can write `DateTime` values.
 pub trait Write {
-    type Error;
+    type Error : core::fmt::Debug;
 
     fn write(&mut self, dt: &DateTime) -> Result<(), Self::Error>;
 }

@@ -20,6 +20,7 @@ where
 impl<D, Err> crate::Display for ScaleDisplay<D>
 where
     D: crate::Display<Error = Err>,
+    Err: core::fmt::Debug,
 {
     type Error = Err;
     type P = D::P;
