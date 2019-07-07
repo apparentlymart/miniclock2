@@ -4,6 +4,15 @@ pub fn draw_big_digit<Display: graphics::Display>(num :u8, disp: &mut Display, t
     let d = num & 0xf;
     let st = top_left;
 
+    // As a special case, if we're drawing a one then we'll put a little point
+    // on the top. Otherwise, it makes everything look really unbalanced due to
+    // how little of the cell is filled in.
+    if d == 1 {
+        disp.fill_rect(Rect::new(st+Vector(5, 1), st+Vector(6, 2)))?;
+        disp.fill_rect(Rect::new(st+Vector(4, 2), st+Vector(6, 3)))?;
+        disp.fill_rect(Rect::new(st+Vector(3, 3), st+Vector(6, 4)))?;
+    }
+
     //       A
     //     -----
     //    |     |
