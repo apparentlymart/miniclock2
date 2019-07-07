@@ -3,6 +3,8 @@
 use bcdtime::DateTime;
 use graphics::vector::{Rect, Vector};
 
+pub mod gfx;
+
 pub struct App<Clock, Display>
 where
     Clock: bcdtime::Read + bcdtime::Write,
@@ -41,9 +43,16 @@ where
     }
 
     pub fn redraw(&mut self) {
-        self.display.clear().unwrap();
+        let disp = &mut self.display;
+
+        disp.clear().unwrap();
+        gfx::draw_big_digit(self.datetime.hour.tens() as u8, disp, Vector(0, 0)).unwrap();
+        gfx::draw_big_digit(self.datetime.hour.units() as u8, disp, Vector(9, 0)).unwrap();
+        gfx::draw_big_digit(self.datetime.minute.tens() as u8, disp, Vector(23, 0)).unwrap();
+        gfx::draw_big_digit(self.datetime.minute.units() as u8, disp, Vector(32, 0)).unwrap();
         if self.colon {
-            self.display.fill_rect(Rect::new4(0, 0, 8, 1)).unwrap();
+            disp.fill_rect(Rect::new4(19, 5, 21, 7)).unwrap();
+            disp.fill_rect(Rect::new4(19, 9, 21, 11)).unwrap();
         }
         self.display.flip().unwrap();
     }

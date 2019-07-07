@@ -3,16 +3,13 @@
 
 extern crate cortex_m_rt;
 
-// We don't have enough flash space for all of the usual panic formatting
-// machinery, so we'll just halt on panic.
-extern crate panic_halt;
-
 use lpc81x_hal as hal;
 use ssd1322::SSD1322;
 
 #[rtfm::app(device = lpc81x_hal)]
 const APP: () = {
     static mut EVENTS: clockmain::Events = ();
+    //static mut TICKINT: bool = ();
     static mut APP: clockmain::App<
         ds3231::DS3231<
             lpc81x_hal::i2c::I2C<
@@ -73,7 +70,7 @@ const APP: () = {
 
         let mut syst = cp.SYST;
         syst.set_clock_source(cortex_m::peripheral::syst::SystClkSource::Core);
-        syst.set_reload(12_000_000);
+        syst.set_reload(6_000_000);
         syst.clear_current();
         syst.enable_counter();
         syst.enable_interrupt();
@@ -105,10 +102,13 @@ const APP: () = {
             4,
         );
 
+        // We'll get clock information from a connected DS3231 over I2C.
         let i2c = p.i2c.activate(p.pins.gpio11, p.pins.gpio10).enable_host_mode();
         let rtc = ds3231::DS3231::new(i2c);
 
         let app = clockmain::App::new(rtc, disp);
+
+        // TODO: SQW pin interrupt from the RTC
 
         init::LateResources {
             APP: app,
@@ -190,4 +190,32 @@ fn init_oled<I: ssd1322::interface::Interface>(
     drv.set_sleep_mode(false)?; // power display back on
 
     Ok(())
+}
+
+#[inline(never)]
+#[panic_handler]
+fn panic(_info: &core::panic::PanicInfo) -> ! {
+    // Error LED (red LED) is on pin 7.
+    const ERR_LED_MASK: u32 = 1 << 7;
+    let gpio = lpc81x_pac::GPIO_PORT::ptr();
+    loop {
+        unsafe { 
+            (*gpio).clr0.write(|w| w.bits(ERR_LED_MASK));
+            (*gpio)
+                .dir0
+                .modify(|r, w| w.bits(r.bits() | ERR_LED_MASK));
+        }
+
+        // If we panicked before we set up interrupts then the LED will
+        // just stay on here, which is fine... but if we got far enough to
+        // have the tick interrupt set up then it will blink.
+        cortex_m::asm::wfi();
+
+        unsafe { 
+            (*gpio).set0.write(|w| w.bits(ERR_LED_MASK));
+        }
+        cortex_m::asm::wfi();
+
+        core::sync::atomic::compiler_fence(core::sync::atomic::Ordering::SeqCst);
+    }
 }
