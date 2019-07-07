@@ -13,14 +13,33 @@ where
     i2c: I2C,
 }
 
-impl<I2C> DS3231<I2C>
+impl<I2C, WRErr, WErr> DS3231<I2C>
 where
-    I2C: i2c::WriteRead + i2c::Write,
+    I2C: i2c::WriteRead<Error=WRErr> + i2c::Write<Error=WErr>,
+    WRErr: core::fmt::Debug,
+    WErr: core::fmt::Debug,
 {
     pub fn new(i2c: I2C) -> Self {
         return Self {
             i2c: i2c,
         }
+    }
+
+    pub fn set_square_wave(&mut self, freq: SquareWaveFrequency) -> Result<(), Error<WRErr, WErr>> {
+        // FIXME: This currently clobbers a bunch of other settings in
+        // this same register. Should do a read/modify/write instead.
+
+        let raw = match freq {
+            SquareWaveFrequency::Disabled => {
+                self.i2c.write(I2C_ADDR, &[0x0eu8, 0b00000100u8]).map_err(Error::w)?;
+                return Ok(());
+            },
+            SquareWaveFrequency::Freq1Hz => 0b00000000,
+            SquareWaveFrequency::Freq1_024kHz => 0b00001000,
+            SquareWaveFrequency::Freq4_096kHz => 0b00010000,
+            SquareWaveFrequency::Freq8_192kHz => 0b00011000,
+        } as u8;
+        self.i2c.write(I2C_ADDR, &[0x0eu8, raw]).map_err(Error::w)
     }
 }
 
@@ -123,4 +142,12 @@ where
     fn w(err: WErr) -> Self {
         Self::Write(err)
     }
+}
+
+pub enum SquareWaveFrequency {
+    Disabled,
+    Freq1Hz,
+    Freq1_024kHz,
+    Freq4_096kHz,
+    Freq8_192kHz,
 }

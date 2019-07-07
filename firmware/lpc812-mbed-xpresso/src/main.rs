@@ -9,7 +9,13 @@ use ssd1322::SSD1322;
 #[rtfm::app(device = lpc81x_hal)]
 const APP: () = {
     static mut EVENTS: clockmain::Events = ();
-    //static mut TICKINT: bool = ();
+    static mut TICKINT: lpc81x_hal::pinint::int::Interrupt0<
+        lpc81x_hal::pinint::mode::Edge<
+            lpc81x_hal::pins::pin::Pin6<
+                lpc81x_hal::pins::mode::Unassigned,
+            >,
+        >,
+    > = ();
     static mut APP: clockmain::App<
         ds3231::DS3231<
             lpc81x_hal::i2c::I2C<
@@ -65,15 +71,7 @@ const APP: () = {
 
     #[init]
     fn init() -> init::LateResources {
-        let cp: rtfm::Peripherals = core;
         let p: hal::Peripherals = device;
-
-        let mut syst = cp.SYST;
-        syst.set_clock_source(cortex_m::peripheral::syst::SystClkSource::Core);
-        syst.set_reload(6_000_000);
-        syst.clear_current();
-        syst.enable_counter();
-        syst.enable_interrupt();
 
         let spi = p
             .spi0
@@ -104,15 +102,22 @@ const APP: () = {
 
         // We'll get clock information from a connected DS3231 over I2C.
         let i2c = p.i2c.activate(p.pins.gpio11, p.pins.gpio10).enable_host_mode();
-        let rtc = ds3231::DS3231::new(i2c);
+        let mut rtc = ds3231::DS3231::new(i2c);
+        // We'll use the 1Hz square wave signal from the RTC as our tick for
+        // updating the clock display. Both the rising and falling edges
+        // will trigger our interrupt, so we'll update the display every
+        // half-second in order to toggle the colon.
+        rtc.set_square_wave(ds3231::SquareWaveFrequency::Freq1Hz).unwrap();
+        let pinint = p.pin_interrupts.activate();
+        let pinint0 = pinint.int0.edge_triggered(p.pins.gpio6);
+        pinint0.enable(true, true); // Once init complets, PININT0 will be called every half-second
 
         let app = clockmain::App::new(rtc, disp);
-
-        // TODO: SQW pin interrupt from the RTC
 
         init::LateResources {
             APP: app,
             EVENTS: clockmain::Events::default(),
+            TICKINT: pinint0,
         }
     }
 
@@ -134,9 +139,10 @@ const APP: () = {
         }
     }
 
-    #[exception(resources = [EVENTS])]
-    fn SysTick() {
+    #[interrupt(resources = [EVENTS, TICKINT])]
+    fn PININT0() {
         resources.EVENTS.tick = true;
+        resources.TICKINT.acknowledge_events();
     }
 };
 
