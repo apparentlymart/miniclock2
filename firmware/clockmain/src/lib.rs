@@ -4,6 +4,7 @@ use bcdtime::DateTime;
 use graphics::vector::{Rect, Vector};
 
 pub mod gfx;
+pub mod minifont;
 
 pub struct App<Clock, Display>
 where
