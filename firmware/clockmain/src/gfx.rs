@@ -27,8 +27,8 @@ pub fn draw_big_digit<Display: graphics::Display>(num :u8, disp: &mut Display, t
 
     // A
     if d == 0 || d == 2 || d == 3 || d == 5 || d == 6 || d == 6 || d == 7 || d == 8 || d == 9 {
-        let mut start = 2;
-        let mut end = 6;
+        let mut start = 1;
+        let mut end = 7;
         if d == 2 || d == 3 || d == 5 || d == 7 {
             start = 0;
         }
@@ -77,8 +77,8 @@ pub fn draw_big_digit<Display: graphics::Display>(num :u8, disp: &mut Display, t
 
     // D
     if d == 0 || d == 2 || d == 3 || d == 5 || d == 6 || d == 8 || d == 9 {
-        let mut start = 2;
-        let mut end = 6;
+        let mut start = 1;
+        let mut end = 7;
         if d == 2 || d == 3 || d == 5 || d == 9 {
             start = 0;
         }
