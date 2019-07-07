@@ -5,6 +5,7 @@ members = [
     "firmware/ds3231",
     "firmware/graphics",
     "firmware/lpc812-mbed-xpresso",
+    "firmware/simulator",
     "firmware/ssd1322",
 ]
 

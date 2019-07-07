@@ -1,0 +1,12 @@
+[package]
+name = "simulator"
+version = "0.1.0"
+authors = ["Martin Atkins <mart@degeneration.co.uk>"]
+edition = "2018"
+
+[dependencies]
+bcdtime = { path = "../bcdtime" }
+chrono = "0.4.7"
+clockmain = { path = "../clockmain" }
+graphics = { path = "../graphics" }
+sdl2 = "0.32.2"
