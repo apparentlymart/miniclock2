@@ -47,12 +47,12 @@ where
 
         disp.clear().unwrap();
         gfx::draw_big_digit(self.datetime.hour.tens() as u8, disp, Vector(0, 0)).unwrap();
-        gfx::draw_big_digit(self.datetime.hour.units() as u8, disp, Vector(9, 0)).unwrap();
-        gfx::draw_big_digit(self.datetime.minute.tens() as u8, disp, Vector(23, 0)).unwrap();
-        gfx::draw_big_digit(self.datetime.minute.units() as u8, disp, Vector(32, 0)).unwrap();
+        gfx::draw_big_digit(self.datetime.hour.units() as u8, disp, Vector(10, 0)).unwrap();
+        gfx::draw_big_digit(self.datetime.minute.tens() as u8, disp, Vector(24, 0)).unwrap();
+        gfx::draw_big_digit(self.datetime.minute.units() as u8, disp, Vector(34, 0)).unwrap();
         if self.colon {
-            disp.fill_rect(Rect::new4(19, 5, 21, 7)).unwrap();
-            disp.fill_rect(Rect::new4(19, 9, 21, 11)).unwrap();
+            disp.fill_rect(Rect::new4(20, 5, 22, 7)).unwrap();
+            disp.fill_rect(Rect::new4(20, 9, 22, 11)).unwrap();
         }
         self.display.flip().unwrap();
     }
