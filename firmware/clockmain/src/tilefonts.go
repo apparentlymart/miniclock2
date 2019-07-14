@@ -30,6 +30,11 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	err = writeBigDigitDefs("digitfont/digits.bin")
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 func findTiles(filenames ...string) TileSet {
@@ -99,7 +104,7 @@ func (b TileBlock) Index(t Tile) int {
 }
 
 func (b TileBlock) Write(fn string) error {
-	tf, err := os.Create("tiles.bin")
+	tf, err := os.Create(fn)
 	if err != nil {
 		return err
 	}
@@ -247,4 +252,81 @@ func loadFont(fn string) (Font, error) {
 	}
 
 	return ret, nil
+}
+
+func writeBigDigitDefs(fn string) error {
+	tf, err := os.Create(fn)
+	if err != nil {
+		return err
+	}
+	defer tf.Close()
+
+	const (
+		A uint16 = 1 << 0
+		B uint16 = 1 << 1
+		C uint16 = 1 << 2
+		D uint16 = 1 << 3
+		E uint16 = 1 << 4
+		F uint16 = 1 << 5
+		G uint16 = 1 << 6
+
+		AB uint16 = 1 << 8
+		BC uint16 = 1 << 9
+		CD uint16 = 1 << 10
+		DE uint16 = 1 << 11
+		EF uint16 = 1 << 12
+		FA uint16 = 1 << 13
+	)
+
+	/*
+		      A
+		FA .-----. AB
+		   |     |
+		 F |     | B
+		   |  G  |
+		EF >-----< BC
+		   |     |
+		 E |     | C
+		   |     |
+		   '-----'
+		DE    D    CD
+
+		The two-letter symbols representing segment intersections are set to
+		1 to indicate that the intersection should be "curved". How exactly it
+		will be curved depends on which of the surrounding segments are also
+		lit. This encoding therefore doesn't encode _all_ of the details
+		required for rendering; some further logic is required to select
+		suitable symbols at the intersections, and to draw the special serif
+		on the digit 1 that isn't directly represented here.
+		The "curve" flag is meaningful only if at least two segments arrive
+		at a particular intersection; if not, it should always be zero.
+	*/
+
+	defs := []uint16{
+		0x0: A | B | C | D | E | F | AB | CD | DE | FA,
+		0x1: B | C,
+		0x2: A | B | G | E | D | AB | BC | EF | DE,
+		0x3: A | B | C | D | G | AB | BC | CD,
+		0x4: F | G | B | C | EF,
+		0x5: A | F | G | C | D | BC | CD,
+		0x6: A | F | G | C | D | E | BC | CD | DE | FA,
+		0x7: A | B | C,
+		0x8: A | B | C | D | E | F | G | AB | BC | CD | DE | EF | FA,
+		0x9: A | B | C | D | F | G | AB | CD | EF | FA,
+		0xA: A | B | C | E | F | G | AB | FA,
+		0xB: A | B | C | D | E | F | G | AB | BC | CD,
+		0xC: A | F | E | D | FA | DE,
+		0xD: A | B | C | D | E | F | AB | CD,
+		0xE: A | F | G | E | D,
+		0xF: A | F | G | E,
+	}
+
+	for _, dig := range defs {
+		_, err = tf.Write([]byte{byte(dig), byte(dig >> 8)})
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
