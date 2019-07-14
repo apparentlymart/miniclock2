@@ -15,7 +15,16 @@ func (s TileSet) Add(t Tile) {
 }
 
 func main() {
-	tileSet := findTiles("blockfont/blockfont.bdf", "digitfont/digitfont.bdf")
+	blockFont, err := loadFont("blockfont/blockfont.bdf")
+	if err != nil {
+		panic(err)
+	}
+	digitFont, err := loadFont("digitfont/digitfont.bdf")
+	if err != nil {
+		panic(err)
+	}
+
+	tileSet := findTiles(blockFont, digitFont)
 	tileBlock := makeTileBlock(tileSet)
 
 	fmt.Printf("There are %d distinct tiles\n", len(tileBlock))
@@ -26,7 +35,7 @@ func main() {
 		log.Fatal("Too many tiles! Only 16 are allowed.")
 	}
 
-	err := tileBlock.Write("tiles.bin")
+	err = tileBlock.Write("tiles.bin")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -35,16 +44,17 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	err = writeBlockFontDefs(blockFont, tileBlock, "blockfont/blockfont.bin", "blockfont/blockfontmap.bin")
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
-func findTiles(filenames ...string) TileSet {
+func findTiles(fonts ...Font) TileSet {
 	ret := make(TileSet)
 
-	for _, fn := range filenames {
-		font, err := loadFont(fn)
-		if err != nil {
-			panic(err)
-		}
+	for _, font := range fonts {
 
 		for _, ch := range font {
 			ts := ch.Bitmap.SizeTiles()
@@ -252,6 +262,68 @@ func loadFont(fn string) (Font, error) {
 	}
 
 	return ret, nil
+}
+
+func writeBlockFontDefs(font Font, tiles TileBlock, fontFn, mapFn string) error {
+	ff, err := os.Create(fontFn)
+	if err != nil {
+		return err
+	}
+	defer ff.Close()
+
+	mf, err := os.Create(mapFn)
+	if err != nil {
+		return err
+	}
+	defer mf.Close()
+
+	// Our use of the ASCII encoding space is very sparse, so we'll use
+	// a custom encoding that skips out all of the gaps. This means that
+	// the clockmain logic will need to do some mapping at rendering time
+	// to convert ASCII codes into our custom codepoints.
+	// Due to the non-power-of-two friendly 5x5 dimensions of our font here,
+	// we have a rather-awkward 13 bytes per glyph, with two tiles encoded
+	// per byte. The last byte includes the 25th tile in its LSB and then
+	// the width of the character (in tiles) in its MSB.
+	//
+	// The custom encoding scheme is in ASCII order, but with unused codepoints
+	// removed. That gives the following blocks:
+	// '!'
+	// ',', '-', '.'
+	// '0'-'9', ':'
+	// '?'
+	// 'A' - 'Z'
+	// 'th', 'st', 'rd', 'nd', <invalid>, <battery>
+	// To translate ASCII into this encoding, the translator must determine
+	// which of the above ranges the character is in and then adjust as
+	// appropriate by the offset into the block.
+	//
+	// There are 48 glyphs in our character set, so our total data for this
+	// font is a total of 48 * 13 bytes = 624 bytes .
+
+	ranges := [][2]byte{
+		{'!', '!'},
+		{',', '.'},
+		{'0', ':'},
+		{'?', '?'},
+		{'A', 'Z'},
+		{0x7b, 0x80}, // The ordinal ligatures and some other misc glyphs
+	}
+
+	var chars [48]Character
+	i := 0
+	for _, rng := range ranges {
+		_, err := mf.Write(rng[:])
+		if err != nil {
+			return err
+		}
+		for c := rng[0]; c <= rng[1]; c++ {
+			chars[i] = font[c]
+			i++
+		}
+	}
+
+	return nil
 }
 
 func writeBigDigitDefs(fn string) error {
