@@ -281,31 +281,31 @@ func writeBlockFontDefs(font Font, tiles TileBlock, fontFn, mapFn string) error 
 	// a custom encoding that skips out all of the gaps. This means that
 	// the clockmain logic will need to do some mapping at rendering time
 	// to convert ASCII codes into our custom codepoints.
-	// Due to the non-power-of-two friendly 5x5 dimensions of our font here,
-	// we have a rather-awkward 13 bytes per glyph, with two tiles encoded
-	// per byte. The last byte includes the 25th tile in its LSB and then
-	// the width of the character (in tiles) in its MSB.
 	//
 	// The custom encoding scheme is in ASCII order, but with unused codepoints
-	// removed. That gives the following blocks:
-	// '!'
-	// ',', '-', '.'
-	// '0'-'9', ':'
-	// '?'
-	// 'A' - 'Z'
-	// 'th', 'st', 'rd', 'nd', <invalid>, <battery>
-	// To translate ASCII into this encoding, the translator must determine
-	// which of the above ranges the character is in and then adjust as
-	// appropriate by the offset into the block.
+	// removed, giving the blocks listed in "ranges" below, which in turn
+	// get encoded into the map file so the firmware can translate from ASCII
+	// to these at runtime when needed.
+	//
+	// Our font is 5x5 for most characters and 6x5 for a few special ligatures,
+	// so each character is encoded as 5 rows with 6 nibbles (3 bytes) per
+	// row, where the leftmost nibble is stored in the least significant bits.
+	// The most significant nibble is always zero for a 5x5 character.
+	//
+	// This gives a rather-awkward 15 bytes per glyph, which we pack densely
+	// and thus the data in ROM must be accessed byte-wise only because half
+	// of the characters do not have their values aligned for larger accesses.
 	//
 	// There are 48 glyphs in our character set, so our total data for this
-	// font is a total of 48 * 13 bytes = 624 bytes .
+	// font is a total of 48 * 15 bytes = 720 bytes.
 
 	ranges := [][2]byte{
-		{'!', '!'},
+		{' ', '!'},
 		{',', '.'},
 		{'0', ':'},
-		{'?', '?'},
+		// NOTE: The question mark glyph is not encoded, since that allows us
+		// to keep this to a nice even 48 characters. We'll see about adding it
+		// later if we have a use-case for it.
 		{'A', 'Z'},
 		{0x7b, 0x80}, // The ordinal ligatures and some other misc glyphs
 	}
@@ -320,6 +320,26 @@ func writeBlockFontDefs(font Font, tiles TileBlock, fontFn, mapFn string) error 
 		for c := rng[0]; c <= rng[1]; c++ {
 			chars[i] = font[c]
 			i++
+		}
+	}
+	if i != 48 {
+		return fmt.Errorf("unexpected number of characters %d", i)
+	}
+
+	for _, char := range chars {
+		for ty := 0; ty < 5; ty++ {
+			for tx := 0; tx < 6; tx += 2 {
+				var b byte
+				tile := char.Bitmap.Tile(tx, ty)
+				tileIdx := tiles.Index(tile)
+				b = byte(tileIdx)
+				if tx+1 < char.WidthTiles {
+					tile := char.Bitmap.Tile(tx+1, ty)
+					tileIdx := tiles.Index(tile)
+					b = b | byte(tileIdx<<4)
+				}
+				ff.Write([]byte{b})
+			}
 		}
 	}
 
