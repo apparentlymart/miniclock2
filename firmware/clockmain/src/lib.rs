@@ -3,6 +3,7 @@
 use bcdtime::DateTime;
 use graphics::vector::{Rect, Vector};
 
+pub mod blockfont;
 pub mod digitfont;
 pub mod gfx;
 pub mod minifont;
