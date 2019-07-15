@@ -3,6 +3,7 @@
 use bcdtime::DateTime;
 use graphics::vector::{Rect, Vector};
 
+pub mod digitfont;
 pub mod gfx;
 pub mod minifont;
 
@@ -22,7 +23,6 @@ where
     Clock: bcdtime::Read + bcdtime::Write,
     Display: graphics::Display,
 {
-
     pub fn new(mut clock: Clock, display: Display) -> Self {
         let init_time = clock.read().unwrap();
 
@@ -75,9 +75,7 @@ impl Events {
 
 impl core::default::Default for Events {
     fn default() -> Self {
-        Self {
-            tick: false,
-        }
+        Self { tick: false }
     }
 }
 
