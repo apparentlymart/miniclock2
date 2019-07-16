@@ -16,5 +16,25 @@ fn map_ascii_code(ch: char) -> u8 {
 
     // If we fall out here then the character isn't in any of our ranges,
     // so we'll return the placeholder character by default.
-    return map_ascii_code(127 as char)
+    return map_ascii_code(127 as char);
+}
+
+pub struct Glyph(&'static [u8]);
+
+impl Glyph {
+    pub fn get(ch: char) -> Self {
+        let idx = map_ascii_code(ch);
+        Self::get_idx(idx)
+    }
+
+    pub fn get_idx(idx: u8) -> Self {
+        let start = (idx as usize) * 15;
+        Self(&GLYPH_DATA[start..start+15])
+    }
+
+    pub fn get_tile_idx(self, tx: i32, ty: i32) -> u8 {
+        let byte_offset = ((ty * 3) + (tx / 2)) as usize;
+        let shift = (tx % 2) as usize;
+        (self.0[byte_offset] >> shift) & 0xf
+    }
 }
