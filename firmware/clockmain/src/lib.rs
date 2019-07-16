@@ -7,6 +7,7 @@ pub mod blockfont;
 pub mod digitfont;
 pub mod gfx;
 pub mod minifont;
+pub mod tiles;
 
 pub struct App<Clock, Display>
 where

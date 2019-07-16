@@ -26,6 +26,7 @@ const DE: u16 = 1 << 11;
 const EF: u16 = 1 << 12;
 const FA: u16 = 1 << 13;
 
+#[derive(Clone, Debug)]
 pub struct Digit(u16);
 
 impl Digit {
@@ -107,3 +108,5 @@ impl Digit {
         self.0 & FA != 0
     }
 }
+
+impl Copy for Digit {}
