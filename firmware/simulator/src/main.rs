@@ -17,7 +17,7 @@ pub fn main() {
         .build()
         .unwrap();
     let canvas = window.into_canvas().build().unwrap();
-    let disp = gfx::scale::ScaleDisplay::new(graphics::SDLGraphics::new(canvas), 8);
+    let disp = graphics::SDLGraphics::new(canvas);
 
     let clock = clock::SystemClock();
 

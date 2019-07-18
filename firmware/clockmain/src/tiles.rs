@@ -4,6 +4,9 @@ static DATA: &[u8] = include_bytes!("tiles.bin");
 pub struct Tile(u16);
 
 impl Tile {
+    pub const FILLED: Tile = Tile(0xffff);
+    pub const EMPTY: Tile = Tile(0x0000);
+
     #[inline(always)]
     pub fn get_by_index(idx: usize) -> Tile {
         let raw = ((DATA[idx * 2 + 1]) as u16) << 8 + (DATA[idx * 2]) as u16;
@@ -16,6 +19,13 @@ impl Tile {
     }
 
     pub fn bits(self) -> u16 {
+        self.0
+    }
+}
+
+impl graphics::Tile for Tile {
+    #[inline(always)]
+    fn raw_pixel_data(&self) -> u16 {
         self.0
     }
 }

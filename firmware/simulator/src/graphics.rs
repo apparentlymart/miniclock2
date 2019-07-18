@@ -1,18 +1,26 @@
-use graphics::vector::{Rect, Vector};
+use graphics::Tile;
+use graphics::vector::Vector;
 use sdl2::pixels::Color;
-use sdl2::render::RenderTarget;
+use std::collections::HashMap;
 
-pub struct SDLGraphics<T: RenderTarget> {
-    canvas: sdl2::render::Canvas<T>,
+pub struct SDLGraphics<'a> {
+    canvas: sdl2::render::Canvas<sdl2::video::Window>,
+    texture_creator: sdl2::render::TextureCreator<sdl2::video::WindowContext>,
+    tile_textures: Box<HashMap<u16, sdl2::render::Texture<'a>>>,
 }
 
-impl<T: RenderTarget> SDLGraphics<T> {
-    pub fn new(canvas: sdl2::render::Canvas<T>) -> Self {
-        Self { canvas: canvas }
+impl<'a> SDLGraphics<'a> {
+    pub fn new(canvas: sdl2::render::Canvas<sdl2::video::Window>) -> Self {
+        let texture_creator = canvas.texture_creator();
+        Self {
+            canvas: canvas,
+            texture_creator: texture_creator,
+            tile_textures: Box::new(HashMap::new()),
+        }
     }
 }
 
-impl<T: RenderTarget> graphics::Display for SDLGraphics<T> {
+impl<'a> graphics::Display for SDLGraphics<'a> {
     type Error = String;
     type P = Color;
     const OFF: Color = Color{r: 0, g: 0, b: 0, a: 255};
@@ -34,10 +42,35 @@ impl<T: RenderTarget> graphics::Display for SDLGraphics<T> {
         Ok(())
     }
 
-    fn fill_rect(&mut self, r: Rect) -> Result<(), Self::Error> {
-        let size = r.end - r.start;
-        self.canvas.set_draw_color(Self::ON);
-        self.canvas.fill_rect(sdl2::rect::Rect::new(r.start.0, r.start.1, size.0 as u32, size.1 as u32))?;
+    fn draw_tile<TILE: Tile>(&mut self, tile: TILE, pos: Vector) -> Result<(), Self::Error> {
+        let raw_tile = tile.raw_pixel_data();
+        let texture = match self.tile_textures.get(&raw_tile) {
+            Some(tx) => tx,
+            None => {
+                let tx = self.texture_creator.create_texture_target(None, 4, 4).unwrap();
+                tx.with_lock(None, |buffer: &mut [u8], pitch: usize| {
+                    for y in 0..4 {
+                        for x in 0..4 {
+                            if tile_get_pixel(raw_tile, Vector(x, y)) {
+                                let offset = (y as usize)*pitch + (x as usize)*3;
+                                buffer[offset] = Self::ON.r;
+                                buffer[offset+1] = Self::ON.g;
+                                buffer[offset+2] = Self::ON.b;
+                            }
+                        }
+                    }
+                });
+                self.tile_textures.insert(raw_tile, tx);
+                &tx
+            },
+        };
+        
         Ok(())
     }
+}
+
+fn tile_get_pixel(raw: u16, p: Vector) -> bool {
+    let row = (raw << (p.1 * 4)) & 0xf;
+    let px = row << p.0 & 0x1;
+    return px != 0;
 }

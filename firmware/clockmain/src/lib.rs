@@ -49,13 +49,15 @@ where
         let disp = &mut self.display;
 
         disp.clear().unwrap();
-        gfx::draw_big_digit(self.datetime.hour.tens() as u8, disp, Vector(0, 0)).unwrap();
-        gfx::draw_big_digit(self.datetime.hour.units() as u8, disp, Vector(10, 0)).unwrap();
-        gfx::draw_big_digit(self.datetime.minute.tens() as u8, disp, Vector(24, 0)).unwrap();
-        gfx::draw_big_digit(self.datetime.minute.units() as u8, disp, Vector(34, 0)).unwrap();
+        //gfx::draw_big_digit(self.datetime.hour.tens() as u8, disp, Vector(0, 0)).unwrap();
+        //gfx::draw_big_digit(self.datetime.hour.units() as u8, disp, Vector(10, 0)).unwrap();
+        //gfx::draw_big_digit(self.datetime.minute.tens() as u8, disp, Vector(24, 0)).unwrap();
+        //gfx::draw_big_digit(self.datetime.minute.units() as u8, disp, Vector(34, 0)).unwrap();
         if self.colon {
-            disp.fill_rect(Rect::new4(20, 5, 22, 7)).unwrap();
-            disp.fill_rect(Rect::new4(20, 9, 22, 11)).unwrap();
+            disp.draw_tile(tiles::Tile::FILLED, Vector(0, 0)).unwrap();
+            disp.draw_tile(tiles::Tile::FILLED, Vector(0, 2)).unwrap();
+            //disp.fill_rect(Rect::new4(20, 5, 22, 7)).unwrap();
+            //disp.fill_rect(Rect::new4(20, 9, 22, 11)).unwrap();
         }
         self.display.flip().unwrap();
     }

@@ -1,6 +1,7 @@
 use graphics::vector::{Rect, Vector};
 
 pub fn draw_big_digit<Display: graphics::Display>(num :u8, disp: &mut Display, top_left: Vector) -> Result<(), Display::Error> {
+    /*
     let d = num & 0xf;
     let st = top_left;
 
@@ -137,7 +138,7 @@ pub fn draw_big_digit<Display: graphics::Display>(num :u8, disp: &mut Display, t
         }
         
         disp.fill_rect(Rect::new(st+Vector(start, 7), st+Vector(end, 9)))?;
-    }
+    }*/
 
     Ok(())
 }
