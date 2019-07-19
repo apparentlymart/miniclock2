@@ -10,6 +10,8 @@ mod clock;
 mod graphics;
 
 pub fn main() {
+    let tiles = clockmain::tiles::Tile::get_all_prerendered();
+
     let sdl_context = sdl2::init().unwrap();
     let video_subsystem = sdl_context.video().unwrap();
     let window = video_subsystem.window("miniclock2", 512, 128)
@@ -17,7 +19,7 @@ pub fn main() {
         .build()
         .unwrap();
     let canvas = window.into_canvas().build().unwrap();
-    let disp = graphics::SDLGraphics::new(canvas);
+    let disp = graphics::SDLGraphics::new(canvas, &tiles[..]);
 
     let clock = clock::SystemClock();
 

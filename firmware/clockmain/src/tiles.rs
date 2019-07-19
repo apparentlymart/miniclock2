@@ -9,8 +9,18 @@ impl Tile {
 
     #[inline(always)]
     pub fn get_by_index(idx: usize) -> Tile {
-        let raw = ((DATA[idx * 2 + 1]) as u16) << 8 + (DATA[idx * 2]) as u16;
+        let hi = (DATA[idx * 2 + 1]) as u16;
+        let lo = (DATA[idx * 2]) as u16;
+        let raw = hi << 8 | lo;
         Self::get_raw(raw)
+    }
+
+    pub fn get_all_prerendered() -> [Tile; 16] {
+        let mut ret = [Tile(0); 16];
+        for i in 0..16 {
+            ret[i] = Self::get_by_index(i);
+        }
+        ret
     }
 
     #[inline(always)]
