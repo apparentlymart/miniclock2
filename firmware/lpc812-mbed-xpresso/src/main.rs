@@ -40,30 +40,28 @@ const APP: () = {
                 >,
             >
         >,
-        graphics::scale::ScaleDisplay<
-            ssd1322::gfx::Display<
-                ssd1322::spi4wire::SPI4Wire<
-                    lpc81x_hal::spi::SPI0<
-                        lpc81x_hal::spi::mode::Host,
-                        lpc81x_hal::pins::mode::Assigned<
-                            lpc81x_hal::pins::pin::Pin12<
-                                lpc81x_hal::pins::mode::Unassigned,
-                            >,
+        ssd1322::gfx::Display<
+            ssd1322::spi4wire::SPI4Wire<
+                lpc81x_hal::spi::SPI0<
+                    lpc81x_hal::spi::mode::Host,
+                    lpc81x_hal::pins::mode::Assigned<
+                        lpc81x_hal::pins::pin::Pin12<
+                            lpc81x_hal::pins::mode::Unassigned,
                         >,
-                        lpc81x_hal::pins::mode::Assigned<
-                            lpc81x_hal::pins::pin::Pin14<
-                                lpc81x_hal::pins::mode::Unassigned,
-                            >,
+                    >,
+                    lpc81x_hal::pins::mode::Assigned<
+                        lpc81x_hal::pins::pin::Pin14<
+                            lpc81x_hal::pins::mode::Unassigned,
                         >,
-                        lpc81x_hal::pins::mode::Unassigned,
-                        lpc81x_hal::pins::mode::Unassigned,
                     >,
-                    lpc81x_hal::pins::pin::Pin13<
-                        lpc81x_hal::pins::mode::DigitalOutput,
-                    >,
-                    lpc81x_hal::pins::pin::Pin15<
-                        lpc81x_hal::pins::mode::DigitalOutput,
-                    >,
+                    lpc81x_hal::pins::mode::Unassigned,
+                    lpc81x_hal::pins::mode::Unassigned,
+                >,
+                lpc81x_hal::pins::pin::Pin13<
+                    lpc81x_hal::pins::mode::DigitalOutput,
+                >,
+                lpc81x_hal::pins::pin::Pin15<
+                    lpc81x_hal::pins::mode::DigitalOutput,
                 >,
             >,
         >,
@@ -95,10 +93,7 @@ const APP: () = {
         // effectively limited to updating only multiples of four pixels in the
         // horizontal axis. To simplify things for now, we'll just scale everything
         // by 4 and produce chunky 4x4 "pixels".
-        let disp = graphics::scale::ScaleDisplay::new(
-            ssd1322::gfx::Display::new(disp_drv, graphics::vector::Vector(256, 64), 28),
-            4,
-        );
+        let disp = ssd1322::gfx::Display::new(disp_drv, graphics::vector::Vector(256, 64), 28);
 
         // We'll get clock information from a connected DS3231 over I2C.
         let i2c = p.i2c.activate(p.pins.gpio11, p.pins.gpio10).enable_host_mode();
