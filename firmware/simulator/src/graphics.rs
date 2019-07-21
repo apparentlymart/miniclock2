@@ -20,12 +20,8 @@ pub struct SDLGraphics {
 }
 
 impl SDLGraphics {
-    pub fn new(
-        canvas: sdl2::render::Canvas<sdl2::video::Window>,
-    ) -> Self {
-        Self {
-            canvas: canvas,
-        }
+    pub fn new(canvas: sdl2::render::Canvas<sdl2::video::Window>) -> Self {
+        Self { canvas: canvas }
     }
 }
 
@@ -53,11 +49,12 @@ impl graphics::Display for SDLGraphics {
 
     fn draw_tile<TILE: Tile>(&mut self, tile: TILE, pos: Vector) -> Result<(), Self::Error> {
         let raw_tile = tile.raw_pixel_data();
+        let raw_pos = pos * 4;
         self.canvas.set_draw_color(ON);
         for y in 0..4 {
             for x in 0..4 {
                 if tile_get_pixel(raw_tile, Vector(x, y)) {
-                    let phys = sdl2::rect::Point::new(x + pos.0, y + pos.1);
+                    let phys = sdl2::rect::Point::new(x + raw_pos.0, y + raw_pos.1);
                     self.canvas.draw_point(phys)?;
                 }
             }
@@ -69,6 +66,6 @@ impl graphics::Display for SDLGraphics {
 fn tile_get_pixel(raw: u16, p: Vector) -> bool {
     let row_mask = 0xf << p.1 * 4;
     let row = (raw & row_mask) >> p.1 * 4;
-    let col_mask = 1 << p.0;
+    let col_mask = 1 << (3-p.0);
     return row & col_mask != 0;
 }

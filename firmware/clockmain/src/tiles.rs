@@ -31,6 +31,10 @@ impl Tile {
     pub fn bits(self) -> u16 {
         self.0
     }
+
+    pub fn invert(self) -> Self {
+        return Self(!self.0)
+    }
 }
 
 impl graphics::Tile for Tile {

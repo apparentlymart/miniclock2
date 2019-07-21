@@ -28,8 +28,8 @@ func main() {
 	tileBlock := makeTileBlock(tileSet)
 
 	fmt.Printf("There are %d distinct tiles\n", len(tileBlock))
-	for _, tile := range tileBlock {
-		fmt.Printf("%#v:\n%s\n", tile, tile.Bitmap().DebugString())
+	for i, tile := range tileBlock {
+		fmt.Printf("%#v (index %d):\n%s\n", tile, i, tile.Bitmap().DebugString())
 	}
 	if len(tileBlock) > 16 {
 		log.Fatal("Too many tiles! Only 16 are allowed.")

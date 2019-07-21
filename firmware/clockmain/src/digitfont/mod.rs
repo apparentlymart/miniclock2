@@ -107,6 +107,11 @@ impl Digit {
     pub fn curve_fa(self) -> bool {
         self.0 & FA != 0
     }
+
+    #[inline(always)]
+    pub fn is_one(self) -> bool {
+        self.0 == B|C
+    }
 }
 
 impl Copy for Digit {}
