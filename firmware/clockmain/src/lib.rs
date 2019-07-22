@@ -28,6 +28,7 @@ where
     clock: Clock,
     display: Display,
     colon: bool,
+    battery: bool,
     datetime: DateTime,
 }
 
@@ -43,6 +44,7 @@ where
             clock: clock,
             display: display,
             colon: false,
+            battery: false,
             datetime: init_time,
         }
     }
@@ -69,6 +71,10 @@ where
             if self.colon {
                 gfx::draw_colon(disp, Vector(20, 0)).unwrap();
             }
+        }
+
+        if self.battery {
+            gfx::draw_block_char(0x80, disp, Vector(64 - 5, -1)).unwrap();
         }
 
         {
