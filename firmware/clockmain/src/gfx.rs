@@ -1,7 +1,7 @@
+use crate::blockfont::Glyph;
 use crate::digitfont::Digit;
 use crate::tiles::Tile;
 use graphics::vector::Vector;
-//use crate::blockfont::Glyph;
 
 pub fn draw_big_digit<Display: graphics::Display>(
     num: u8,
@@ -10,6 +10,45 @@ pub fn draw_big_digit<Display: graphics::Display>(
 ) -> Result<(), Display::Error> {
     let digit = Digit::get(num);
     draw_big_digit_raw(digit, disp, top_left)
+}
+
+pub fn draw_block_text<'s, Display: graphics::Display>(
+    msg: &'s [u8],
+    disp: &mut Display,
+    top_left: Vector,
+) -> Result<i32, Display::Error> {
+    let mut next_pos = top_left;
+    let mut total_w = 0;
+    for ch in msg {
+        let w = draw_block_char(*ch, disp, next_pos)?;
+        total_w += w;
+        next_pos.0 += w + 1;
+    }
+    Ok(total_w)
+}
+
+pub fn draw_block_char<Display: graphics::Display>(
+    ch: u8,
+    disp: &mut Display,
+    top_left: Vector,
+) -> Result<i32, Display::Error> {
+    let mut w = 5;
+    let glyph = Glyph::get(ch as char);
+
+    for ty in 0..5 {
+        for tx in 0..6 {
+            let tile_idx = glyph.get_tile_idx(tx, ty);
+            if tile_idx != 0 {
+                let tile = Tile::get_by_index(tile_idx as usize);
+                disp.draw_tile(tile, Vector(tx + top_left.0, ty + top_left.1))?;
+                if tx == 6 {
+                    w = 6;
+                }
+            }
+        }
+    }
+
+    Ok(w)
 }
 
 pub fn draw_big_digit_raw<Display: graphics::Display>(

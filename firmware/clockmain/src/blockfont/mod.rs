@@ -35,7 +35,7 @@ impl Glyph {
 
     pub fn get_tile_idx(self, tx: i32, ty: i32) -> u8 {
         let byte_offset = ((ty * 3) + (tx / 2)) as usize;
-        let shift = (tx % 2) as usize;
+        let shift = ((tx % 2) * 4) as usize;
         (self.0[byte_offset] >> shift) & 0xf
     }
 }
