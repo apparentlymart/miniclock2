@@ -64,7 +64,10 @@ where
         disp.clear().unwrap();
 
         {
-            gfx::draw_big_digit(self.datetime.hour.tens() as u8, disp, Vector(0, 0)).unwrap();
+            let hour_tens = self.datetime.hour.tens() as u8;
+            if hour_tens != 0 {
+                gfx::draw_big_digit(self.datetime.hour.tens() as u8, disp, Vector(0, 0)).unwrap();
+            }
             gfx::draw_big_digit(self.datetime.hour.units() as u8, disp, Vector(10, 0)).unwrap();
             gfx::draw_big_digit(self.datetime.minute.tens() as u8, disp, Vector(24, 0)).unwrap();
             gfx::draw_big_digit(self.datetime.minute.units() as u8, disp, Vector(34, 0)).unwrap();
@@ -101,12 +104,14 @@ where
                 0x7d => 6, // nd
                 _ => 5,
             };
-            gfx::draw_block_char(
-                '0' as u8 + tens as u8,
-                disp,
-                Vector(64 - ordinal_lig_wid - 12, 11),
-            )
-            .unwrap();
+            if tens != 0 {
+                gfx::draw_block_char(
+                    '0' as u8 + tens as u8,
+                    disp,
+                    Vector(64 - ordinal_lig_wid - 12, 11),
+                )
+                .unwrap();
+            }
             gfx::draw_block_char(
                 '0' as u8 + units as u8,
                 disp,
